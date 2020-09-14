@@ -49,6 +49,7 @@ import org.catrobat.catroid.content.bricks.UserDefinedReceiverBrick;
 import org.catrobat.catroid.content.bricks.VisualPlacementBrick;
 import org.catrobat.catroid.io.asynctask.ProjectSaveTask;
 import org.catrobat.catroid.ui.BottomBar;
+import org.catrobat.catroid.ui.CatblocksActivity;
 import org.catrobat.catroid.ui.controller.BackpackListManager;
 import org.catrobat.catroid.ui.dragndrop.BrickListView;
 import org.catrobat.catroid.ui.fragment.AddBrickFragment;
@@ -85,7 +86,7 @@ public class ScriptFragment extends ListFragment implements
 	public static final String TAG = ScriptFragment.class.getSimpleName();
 
 	@Retention(RetentionPolicy.SOURCE)
-	@IntDef({NONE, BACKPACK, COPY, DELETE, COMMENT})
+	@IntDef({NONE, BACKPACK, COPY, DELETE, COMMENT, CATBLOCKS})
 	@interface ActionModeType {
 	}
 
@@ -94,6 +95,8 @@ public class ScriptFragment extends ListFragment implements
 	private static final int COPY = 2;
 	private static final int DELETE = 3;
 	private static final int COMMENT = 4;
+	private static final int CATBLOCKS = 5;
+
 
 	@ActionModeType
 	private int actionModeType = NONE;
@@ -285,6 +288,9 @@ public class ScriptFragment extends ListFragment implements
 				break;
 			case R.id.comment_in_out:
 				prepareActionMode(COMMENT);
+				break;
+			case R.id.catblocks:
+				switchToCatblocks();
 				break;
 			default:
 				return super.onOptionsItemSelected(item);
@@ -647,6 +653,11 @@ public class ScriptFragment extends ListFragment implements
 	private void switchToBackpack() {
 		Intent intent = new Intent(getActivity(), BackpackActivity.class);
 		intent.putExtra(BackpackActivity.EXTRA_FRAGMENT_POSITION, BackpackActivity.FRAGMENT_SCRIPTS);
+		startActivity(intent);
+	}
+
+	private void switchToCatblocks() {
+		Intent intent = new Intent(getActivity(), CatblocksActivity.class);
 		startActivity(intent);
 	}
 
