@@ -20,24 +20,31 @@
     <div id="catblocks-program-container"></div>
     <script>
       window.onload = function () {
+
         CatBlocks.init({
           container: 'catblocks-program-container',
           renderSize: 0.75,
-          language: 'de',
-          rtl: false,
-          shareRoot: 'assets/catblocks',
-          media: 'media',
-          i18n: 'i18n',
-          noImageFound: 'No_Image_Available.jpg'
+          language: Android.getCurrentLanguage(),
+          rtl: Android.isRTL(),
+          shareRoot: 'https://appassets.androidplatform.net/assets/catblocks',
+          media: 'https://appassets.androidplatform.net/assets/catblocks/media',
+          i18n: 'https://appassets.androidplatform.net/assets/catblocks/i18n',
+          noImageFound: 'No_Image_Available.jpg',
+          renderLooks: false,
+          renderSounds: false
+        }).then(() => {
+          const programXML = Android.getCurrentProject();
+          console.log(programXML);
+          CatBlocks.renderForAndroid(programXML, 'share');
         });
 
-        CatBlocks.render('assets', 'share')
-          .then(() => {
-            console.log('success');
-          })
-          .catch(e => {
-            console.error(e);
-          });
+<!--        CatBlocks.render('assets', 'share')-->
+<!--          .then(() => {-->
+<!--            console.log('success');-->
+<!--          })-->
+<!--          .catch(e => {-->
+<!--            console.error(e);-->
+<!--          });-->
       };
     </script>
     <script
@@ -55,5 +62,6 @@
       integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
       crossorigin="anonymous"
     ></script>
-  <script type="text/javascript" src="CatBlocks.js?a54aa1ae5714dedd3117"></script></body>
+  <script type="text/javascript"
+          src="https://appassets.androidplatform.net/assets/catblocks/CatBlocks.js?a54aa1ae5714dedd3117"></script></body>
 </html>

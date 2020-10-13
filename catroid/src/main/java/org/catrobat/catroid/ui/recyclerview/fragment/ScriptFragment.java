@@ -35,6 +35,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.gson.Gson;
+
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.content.Project;
@@ -48,6 +50,7 @@ import org.catrobat.catroid.content.bricks.ScriptBrick;
 import org.catrobat.catroid.content.bricks.UserDefinedReceiverBrick;
 import org.catrobat.catroid.content.bricks.VisualPlacementBrick;
 import org.catrobat.catroid.content.bricks.brickspinner.BrickSpinner;
+import org.catrobat.catroid.io.XstreamSerializer;
 import org.catrobat.catroid.io.asynctask.ProjectSaveTask;
 import org.catrobat.catroid.ui.BottomBar;
 import org.catrobat.catroid.ui.CatblocksActivity;
@@ -64,12 +67,20 @@ import org.catrobat.catroid.ui.recyclerview.controller.BrickController;
 import org.catrobat.catroid.ui.recyclerview.controller.ScriptController;
 import org.catrobat.catroid.ui.recyclerview.dialog.TextInputDialog;
 import org.catrobat.catroid.ui.recyclerview.dialog.textwatcher.UniqueStringTextWatcher;
+import org.catrobat.catroid.ui.settingsfragments.SettingsFragment;
 import org.catrobat.catroid.utils.SnackbarUtil;
 import org.catrobat.catroid.utils.ToastUtil;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import androidx.annotation.IntDef;
@@ -77,6 +88,8 @@ import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.ListFragment;
 
 public class ScriptFragment extends ListFragment implements
@@ -90,6 +103,12 @@ public class ScriptFragment extends ListFragment implements
 	@IntDef({NONE, BACKPACK, COPY, DELETE, COMMENT, CATBLOCKS})
 	@interface ActionModeType {
 	}
+
+	public ScriptFragment(Project currentProject) {
+		this.currentProject = currentProject;
+	}
+
+	private Project currentProject;
 
 	private static final int NONE = 0;
 	private static final int BACKPACK = 1;
@@ -666,8 +685,14 @@ public class ScriptFragment extends ListFragment implements
 	}
 
 	private void switchToCatblocks() {
-		Intent intent = new Intent(getActivity(), CatblocksActivity.class);
-		startActivity(intent);
+
+		SettingsFragment.setUseCatBlocks(getContext(), true);
+
+		FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+		fragmentTransaction.replace(R.id.fragment_container,
+				new CatblocksScriptFragment(currentProject),
+				CatblocksScriptFragment.Companion.getTAG());
+		fragmentTransaction.commit();
 	}
 
 	private void copy(List<Brick> selectedBricks) {
