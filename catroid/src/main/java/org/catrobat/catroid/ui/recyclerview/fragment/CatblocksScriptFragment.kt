@@ -92,7 +92,9 @@ class CatblocksScriptFragment(currentProject: Project) : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        BottomBar.hideBottomBar(activity)
+        BottomBar.showBottomBar(activity)
+        BottomBar.showPlayButton(activity);
+        BottomBar.hideAddButton(activity);
 
         setHasOptionsMenu(true)
 
