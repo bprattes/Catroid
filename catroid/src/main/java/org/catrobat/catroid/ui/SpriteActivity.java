@@ -184,8 +184,11 @@ public class SpriteActivity extends BaseActivity {
 							ScriptFragment.TAG);
 				}
 				else {
+					Sprite currentSprite = ProjectManager.getInstance().getCurrentSprite();
+					Scene currentScene = ProjectManager.getInstance().getCurrentlyEditedScene();
 					fragmentTransaction.replace(R.id.fragment_container,
-							new CatblocksScriptFragment(currentProject),
+							new CatblocksScriptFragment(currentProject, currentScene,
+									currentSprite, 0),
 							CatblocksScriptFragment.Companion.getTAG());
 				}
 				break;

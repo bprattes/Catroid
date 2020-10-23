@@ -34,7 +34,11 @@
           renderSounds: false
         }).then(() => {
           const programXML = Android.getCurrentProject();
-          CatBlocks.renderForAndroid(programXML, 'share');
+          console.log(programXML);
+          const scene = Android.getSceneNameToDisplay();
+          const object = Android.getSpriteNameToDisplay();
+          const script = Android.getScriptIndexToDisplay();
+          CatBlocks.renderForAndroid(programXML, 'share', scene, object, script);
         });
       };
     </script>

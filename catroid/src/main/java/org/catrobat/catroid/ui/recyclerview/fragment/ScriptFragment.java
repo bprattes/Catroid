@@ -686,11 +686,36 @@ public class ScriptFragment extends ListFragment implements
 
 	private void switchToCatblocks() {
 
+		int scriptIndex = -1;
+
+		try {
+			int firstVisible = listView.getFirstVisiblePosition();
+
+			if(firstVisible >= 0)
+			{
+				Object firstBrick = listView.getItemAtPosition((firstVisible));
+
+				if(firstBrick != null && firstBrick instanceof Brick)
+				{
+					Script scriptOfBrick = ((Brick)firstBrick).getScript();
+
+					scriptIndex =
+							ProjectManager.getInstance().getCurrentSprite().getScriptIndex(scriptOfBrick);
+				}
+			}
+		}
+		catch (Exception e) {}
+
+		Sprite currentSprite = ProjectManager.getInstance().getCurrentSprite();
+		Scene currentScene = ProjectManager.getInstance().getCurrentlyEditedScene();
+
 		SettingsFragment.setUseCatBlocks(getContext(), true);
 
+		CatblocksScriptFragment catblocksFragment = new CatblocksScriptFragment(currentProject,
+				currentScene, currentSprite, scriptIndex);
+
 		FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-		fragmentTransaction.replace(R.id.fragment_container,
-				new CatblocksScriptFragment(currentProject),
+		fragmentTransaction.replace(R.id.fragment_container, catblocksFragment,
 				CatblocksScriptFragment.Companion.getTAG());
 		fragmentTransaction.commit();
 	}
