@@ -20,7 +20,6 @@
     <div id="catblocks-program-container"></div>
     <script>
       window.onload = function () {
-
         CatBlocks.init({
           container: 'catblocks-program-container',
           renderSize: 0.75,
@@ -31,7 +30,8 @@
           i18n: 'https://appassets.androidplatform.net/assets/catblocks/i18n',
           noImageFound: 'No_Image_Available.jpg',
           renderLooks: false,
-          renderSounds: false
+          renderSounds: false,
+          readOnly: false
         }).then(() => {
           const programXML = Android.getCurrentProject();
           console.log(programXML);

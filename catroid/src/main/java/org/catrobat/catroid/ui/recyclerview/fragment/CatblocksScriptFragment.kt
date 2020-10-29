@@ -44,11 +44,13 @@ import org.catrobat.catroid.R
 import org.catrobat.catroid.content.Project
 import org.catrobat.catroid.content.Scene
 import org.catrobat.catroid.content.Sprite
+import org.catrobat.catroid.content.bricks.Brick
 import org.catrobat.catroid.io.XstreamSerializer
 import org.catrobat.catroid.ui.BottomBar
 import org.catrobat.catroid.ui.CatblocksActivity
 import org.catrobat.catroid.ui.settingsfragments.SettingsFragment
 import java.util.Locale
+import java.util.UUID
 
 class CatblocksScriptFragment(currentProject: Project, currentScene: Scene?, currentSprite:
 Sprite?, currentScriptIndex: Int) : Fragment() {
@@ -113,7 +115,7 @@ Sprite?, currentScriptIndex: Int) : Fragment() {
 
     private fun initWebView(catblocksWebview: WebView) {
         catblocksWebview.settings.javaScriptEnabled = true
-        WebView.setWebContentsDebuggingEnabled(true);
+//        WebView.setWebContentsDebuggingEnabled(true);
 
         val assetLoader: WebViewAssetLoader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(activity!!))
@@ -121,11 +123,8 @@ Sprite?, currentScriptIndex: Int) : Fragment() {
             .build()
 
 
-        val xmlCurrentProject = XstreamSerializer.getInstance().getXmlAsStringFromProject(
-            currentProject
-        )
         catblocksWebview.addJavascriptInterface(
-            JSInterface(xmlCurrentProject, currentScene, currentSprite, currentScriptIndex),
+            JSInterface(currentProject, currentScene, currentSprite, currentScriptIndex),
             "Android"
         );
 
@@ -141,16 +140,17 @@ Sprite?, currentScriptIndex: Int) : Fragment() {
         catblocksWebview.loadUrl("https://appassets.androidplatform.net/assets/catblocks/index.html");
     }
 
-    class JSInterface(projectXML: String, scene: Scene?, sprite: Sprite?, script: Int) {
+    class JSInterface(project: Project, scene: Scene?, sprite: Sprite?, script: Int) {
 
-        private val _projectXML = projectXML
+        private val _project = project;
         private val _scene = scene;
         private val _sprite = sprite;
         private val _script = script;
 
         @JavascriptInterface
         fun getCurrentProject():String {
-            return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n$_projectXML"
+            val projectXml = XstreamSerializer.getInstance().getXmlAsStringFromProject(_project)
+            return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n$projectXml"
         }
 
         @JavascriptInterface
@@ -184,6 +184,22 @@ Sprite?, currentScriptIndex: Int) : Fragment() {
         @JavascriptInterface
         fun getScriptIndexToDisplay():Int {
             return _script;
+        }
+
+        @JavascriptInterface
+        fun updateScriptPosition(strScriptId:String, x:String, y:String) {
+            val scriptId = UUID.fromString(strScriptId)
+            for(scene in _project.sceneList) {
+                for(sprite in scene.spriteList) {
+                    for(script in sprite.scriptList) {
+                        if(script.scriptId == scriptId) {
+                            script.posX = x.toFloat()
+                            script.posY = y.toFloat()
+                            return
+                        }
+                    }
+                }
+            }
         }
     }
 }
