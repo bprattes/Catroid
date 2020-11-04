@@ -285,6 +285,7 @@ public class ScriptFragment extends ListFragment implements
 	public void onPrepareOptionsMenu(Menu menu) {
 		menu.findItem(R.id.show_details).setVisible(false);
 		menu.findItem(R.id.rename).setVisible(false);
+		menu.findItem(R.id.catblocks_reorder_scripts).setVisible(false);
 		super.onPrepareOptionsMenu(menu);
 	}
 

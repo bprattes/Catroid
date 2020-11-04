@@ -31,11 +31,12 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
+import android.webkit.ValueCallback
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -44,21 +45,19 @@ import org.catrobat.catroid.R
 import org.catrobat.catroid.content.Project
 import org.catrobat.catroid.content.Scene
 import org.catrobat.catroid.content.Sprite
-import org.catrobat.catroid.content.bricks.Brick
 import org.catrobat.catroid.io.XstreamSerializer
 import org.catrobat.catroid.ui.BottomBar
-import org.catrobat.catroid.ui.CatblocksActivity
 import org.catrobat.catroid.ui.settingsfragments.SettingsFragment
+import java.lang.Exception
 import java.util.Locale
 import java.util.UUID
 
-class CatblocksScriptFragment(currentProject: Project, currentScene: Scene?, currentSprite:
-Sprite?, currentScriptIndex: Int) : Fragment() {
+class CatblocksScriptFragment(
+    private val currentProject: Project, private val currentScene: Scene?,
+    private val currentSprite: Sprite?, private val currentScriptIndex: Int
+) : Fragment() {
 
-    val currentProject:Project = currentProject
-    val currentScene:Scene? = currentScene
-    val currentSprite:Sprite? = currentSprite
-    val currentScriptIndex:Int = currentScriptIndex
+    private var webview:WebView? = null
 
     companion object {
         val TAG: String = CatblocksScriptFragment::class.java.simpleName
@@ -85,6 +84,14 @@ Sprite?, currentScriptIndex: Int) : Fragment() {
 
             return true
         }
+        else if(item.itemId == R.id.catblocks_reorder_scripts) {
+            try {
+                val callback = ReorderCallback()
+                webview!!.evaluateJavascript("javascript:CatBlocks.reorderCurrentScripts();",
+                                             callback)
+            }
+            catch(e:Exception) {}
+        }
         return super.onOptionsItemSelected(item)
     }
 
@@ -110,12 +117,13 @@ Sprite?, currentScriptIndex: Int) : Fragment() {
         val view = View.inflate(activity, R.layout.fragment_catblocks, null)
         val webView = view.findViewById<WebView>(R.id.catblocksWebView)
         initWebView(webView)
+        this.webview = webView
         return view
     }
 
     private fun initWebView(catblocksWebview: WebView) {
         catblocksWebview.settings.javaScriptEnabled = true
-//        WebView.setWebContentsDebuggingEnabled(true);
+        WebView.setWebContentsDebuggingEnabled(true);
 
         val assetLoader: WebViewAssetLoader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(activity!!))
@@ -140,16 +148,19 @@ Sprite?, currentScriptIndex: Int) : Fragment() {
         catblocksWebview.loadUrl("https://appassets.androidplatform.net/assets/catblocks/index.html");
     }
 
-    class JSInterface(project: Project, scene: Scene?, sprite: Sprite?, script: Int) {
+    class ReorderCallback : ValueCallback<String> {
 
-        private val _project = project;
-        private val _scene = scene;
-        private val _sprite = sprite;
-        private val _script = script;
+        override fun onReceiveValue(value: String?) {
+        }
+    }
+
+    class JSInterface(
+        private val project: Project, private val scene: Scene?, private val sprite: Sprite?,
+        private val script: Int) {
 
         @JavascriptInterface
         fun getCurrentProject():String {
-            val projectXml = XstreamSerializer.getInstance().getXmlAsStringFromProject(_project)
+            val projectXml = XstreamSerializer.getInstance().getXmlAsStringFromProject(project)
             return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n$projectXml"
         }
 
@@ -167,29 +178,29 @@ Sprite?, currentScriptIndex: Int) : Fragment() {
 
         @JavascriptInterface
         fun getSceneNameToDisplay():String? {
-            if(_scene != null) {
-                return _scene.name.trim();
+            if(scene != null) {
+                return scene.name.trim();
             }
             return null;
         }
 
         @JavascriptInterface
         fun getSpriteNameToDisplay():String? {
-            if(_sprite != null) {
-                return _sprite.name.trim();
+            if(sprite != null) {
+                return sprite.name.trim();
             }
             return null;
         }
 
         @JavascriptInterface
         fun getScriptIndexToDisplay():Int {
-            return _script;
+            return script;
         }
 
         @JavascriptInterface
         fun updateScriptPosition(strScriptId:String, x:String, y:String) {
             val scriptId = UUID.fromString(strScriptId)
-            for(scene in _project.sceneList) {
+            for(scene in project.sceneList) {
                 for(sprite in scene.spriteList) {
                     for(script in sprite.scriptList) {
                         if(script.scriptId == scriptId) {
