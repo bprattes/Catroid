@@ -53,7 +53,7 @@ import java.util.Locale
 import java.util.UUID
 
 class CatblocksScriptFragment(
-    private val currentProject: Project, private val currentScene: Scene?,
+    private val currentProject: Project?, private val currentScene: Scene?,
     private val currentSprite: Sprite?, private val currentScriptIndex: Int
 ) : Fragment() {
 
@@ -99,7 +99,7 @@ class CatblocksScriptFragment(
         super.onResume()
 
         val actionBar = (activity as AppCompatActivity?)!!.supportActionBar
-        actionBar?.title = currentProject.name
+        actionBar?.title = currentProject?.name
     }
 
     override fun onCreateView(
@@ -155,7 +155,7 @@ class CatblocksScriptFragment(
     }
 
     class JSInterface(
-        private val project: Project, private val scene: Scene?, private val sprite: Sprite?,
+        private val project: Project?, private val scene: Scene?, private val sprite: Sprite?,
         private val script: Int) {
 
         @JavascriptInterface
@@ -199,6 +199,9 @@ class CatblocksScriptFragment(
 
         @JavascriptInterface
         fun updateScriptPosition(strScriptId:String, x:String, y:String) {
+            if(project == null)
+                return;
+
             val scriptId = UUID.fromString(strScriptId)
             for(scene in project.sceneList) {
                 for(sprite in scene.spriteList) {
