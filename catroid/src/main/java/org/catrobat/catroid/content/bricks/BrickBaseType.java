@@ -35,6 +35,7 @@ import org.catrobat.catroid.ui.recyclerview.fragment.ScriptFragment;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.LayoutRes;
@@ -51,6 +52,8 @@ public abstract class BrickBaseType implements Brick {
 	protected transient Brick parent;
 
 	protected boolean commentedOut;
+
+	protected UUID brickId = UUID.randomUUID();
 
 	@Override
 	public boolean isCommentedOut() {
@@ -75,6 +78,7 @@ public abstract class BrickBaseType implements Brick {
 		clone.checkbox = null;
 		clone.parent = null;
 		clone.commentedOut = commentedOut;
+		clone.brickId = UUID.randomUUID();
 		return clone;
 	}
 
@@ -196,5 +200,10 @@ public abstract class BrickBaseType implements Brick {
 		}
 		position += 2;
 		return "Brick at position " + position + "\nin \"" + scriptName + "\"";
+	}
+
+	@Override
+	public UUID getBrickID() {
+		return brickId;
 	}
 }

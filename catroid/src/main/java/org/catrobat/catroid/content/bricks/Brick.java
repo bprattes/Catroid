@@ -35,6 +35,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import androidx.annotation.IntDef;
 
@@ -203,4 +204,6 @@ public interface Brick extends Serializable, Cloneable {
 	boolean hasHelpPage();
 
 	String getHelpUrl(String category);
+
+	UUID getBrickID();
 }

@@ -126,8 +126,8 @@ class CatblocksScriptFragment(
         WebView.setWebContentsDebuggingEnabled(true);
 
         val assetLoader: WebViewAssetLoader = WebViewAssetLoader.Builder()
-            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(activity!!))
-            .addPathHandler("/res/", WebViewAssetLoader.ResourcesPathHandler(activity!!))
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(requireActivity()))
+            .addPathHandler("/res/", WebViewAssetLoader.ResourcesPathHandler(requireActivity()))
             .build()
 
 
