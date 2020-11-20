@@ -35,8 +35,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.gson.Gson;
-
+import org.catrobat.catroid.BuildConfig;
 import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.content.Project;
@@ -50,10 +49,8 @@ import org.catrobat.catroid.content.bricks.ScriptBrick;
 import org.catrobat.catroid.content.bricks.UserDefinedReceiverBrick;
 import org.catrobat.catroid.content.bricks.VisualPlacementBrick;
 import org.catrobat.catroid.content.bricks.brickspinner.BrickSpinner;
-import org.catrobat.catroid.io.XstreamSerializer;
 import org.catrobat.catroid.io.asynctask.ProjectSaveTask;
 import org.catrobat.catroid.ui.BottomBar;
-import org.catrobat.catroid.ui.CatblocksActivity;
 import org.catrobat.catroid.ui.controller.BackpackListManager;
 import org.catrobat.catroid.ui.dragndrop.BrickListView;
 import org.catrobat.catroid.ui.fragment.AddBrickFragment;
@@ -71,16 +68,9 @@ import org.catrobat.catroid.ui.settingsfragments.SettingsFragment;
 import org.catrobat.catroid.utils.SnackbarUtil;
 import org.catrobat.catroid.utils.ToastUtil;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 import androidx.annotation.IntDef;
@@ -88,7 +78,6 @@ import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.ListFragment;
 
@@ -116,7 +105,6 @@ public class ScriptFragment extends ListFragment implements
 	private static final int DELETE = 3;
 	private static final int COMMENT = 4;
 	private static final int CATBLOCKS = 5;
-
 
 	@ActionModeType
 	private int actionModeType = NONE;
@@ -158,6 +146,8 @@ public class ScriptFragment extends ListFragment implements
 				adapter.setCheckBoxMode(NONE);
 				actionMode.finish();
 				return false;
+			case CATBLOCKS:
+				break;
 		}
 		return true;
 	}
@@ -206,6 +196,8 @@ public class ScriptFragment extends ListFragment implements
 				break;
 			case NONE:
 				throw new IllegalStateException("ActionModeType not set correctly");
+			case CATBLOCKS:
+				break;
 		}
 	}
 
@@ -286,6 +278,9 @@ public class ScriptFragment extends ListFragment implements
 		menu.findItem(R.id.show_details).setVisible(false);
 		menu.findItem(R.id.rename).setVisible(false);
 		menu.findItem(R.id.catblocks_reorder_scripts).setVisible(false);
+		if (!BuildConfig.FEATURE_CATBLOCKS_ENABLED) {
+			menu.findItem(R.id.catblocks).setVisible(false);
+		}
 		super.onPrepareOptionsMenu(menu);
 	}
 
@@ -421,6 +416,8 @@ public class ScriptFragment extends ListFragment implements
 				break;
 			case NONE:
 				throw new IllegalStateException("ActionModeType not set Correctly");
+			case CATBLOCKS:
+				break;
 		}
 	}
 
@@ -686,26 +683,22 @@ public class ScriptFragment extends ListFragment implements
 	}
 
 	private void switchToCatblocks() {
+		if (!BuildConfig.FEATURE_CATBLOCKS_ENABLED) {
+			return;
+		}
 
 		int scriptIndex = -1;
 
-		try {
-			int firstVisible = listView.getFirstVisiblePosition();
+		int firstVisible = listView.getFirstVisiblePosition();
 
-			if(firstVisible >= 0)
-			{
-				Object firstBrick = listView.getItemAtPosition((firstVisible));
-
-				if(firstBrick != null && firstBrick instanceof Brick)
-				{
-					Script scriptOfBrick = ((Brick)firstBrick).getScript();
-
-					scriptIndex =
-							ProjectManager.getInstance().getCurrentSprite().getScriptIndex(scriptOfBrick);
-				}
+		if (firstVisible >= 0) {
+			Object firstBrick = listView.getItemAtPosition(firstVisible);
+			if (firstBrick instanceof Brick) {
+				Script scriptOfBrick = ((Brick) firstBrick).getScript();
+				scriptIndex =
+						ProjectManager.getInstance().getCurrentSprite().getScriptIndex(scriptOfBrick);
 			}
 		}
-		catch (Exception e) {}
 
 		Sprite currentSprite = ProjectManager.getInstance().getCurrentSprite();
 		Scene currentScene = ProjectManager.getInstance().getCurrentlyEditedScene();

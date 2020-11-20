@@ -23,6 +23,7 @@
 
 package org.catrobat.catroid.ui.recyclerview.fragment
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -36,11 +37,11 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.webkit.WebViewAssetLoader
+import org.catrobat.catroid.BuildConfig
 import org.catrobat.catroid.R
 import org.catrobat.catroid.content.Project
 import org.catrobat.catroid.content.Scene
@@ -48,16 +49,17 @@ import org.catrobat.catroid.content.Sprite
 import org.catrobat.catroid.io.XstreamSerializer
 import org.catrobat.catroid.ui.BottomBar
 import org.catrobat.catroid.ui.settingsfragments.SettingsFragment
-import java.lang.Exception
 import java.util.Locale
 import java.util.UUID
 
 class CatblocksScriptFragment(
-    private val currentProject: Project?, private val currentScene: Scene?,
-    private val currentSprite: Sprite?, private val currentScriptIndex: Int
+    private val currentProject: Project?,
+    private val currentScene: Scene?,
+    private val currentSprite: Sprite?,
+    private val currentScriptIndex: Int
 ) : Fragment() {
 
-    private var webview:WebView? = null
+    private var webview: WebView? = null
 
     companion object {
         val TAG: String = CatblocksScriptFragment::class.java.simpleName
@@ -70,27 +72,23 @@ class CatblocksScriptFragment(
         menu.removeItem(R.id.delete)
         menu.removeItem(R.id.rename)
         menu.removeItem(R.id.show_details)
-
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if(item.itemId == R.id.catblocks) {
+        if (item.itemId == R.id.catblocks) {
             SettingsFragment.setUseCatBlocks(context, false)
 
             val fragmentTransaction = fragmentManager?.beginTransaction()
-            fragmentTransaction?.replace(R.id.fragment_container, ScriptFragment(currentProject),
-                                        ScriptFragment.TAG)
+            fragmentTransaction?.replace(
+                R.id.fragment_container, ScriptFragment(currentProject),
+                ScriptFragment.TAG
+            )
             fragmentTransaction?.commit()
 
             return true
-        }
-        else if(item.itemId == R.id.catblocks_reorder_scripts) {
-            try {
-                val callback = ReorderCallback()
-                webview!!.evaluateJavascript("javascript:CatBlocks.reorderCurrentScripts();",
-                                             callback)
-            }
-            catch(e:Exception) {}
+        } else if (item.itemId == R.id.catblocks_reorder_scripts) {
+            val callback = ReorderCallback()
+            webview!!.evaluateJavascript("javascript:CatBlocks.reorderCurrentScripts();", callback)
         }
         return super.onOptionsItemSelected(item)
     }
@@ -108,11 +106,10 @@ class CatblocksScriptFragment(
         savedInstanceState: Bundle?
     ): View? {
         BottomBar.showBottomBar(activity)
-        BottomBar.showPlayButton(activity);
-        BottomBar.hideAddButton(activity);
+        BottomBar.showPlayButton(activity)
+        BottomBar.hideAddButton(activity)
 
         setHasOptionsMenu(true)
-
 
         val view = View.inflate(activity, R.layout.fragment_catblocks, null)
         val webView = view.findViewById<WebView>(R.id.catblocksWebView)
@@ -121,20 +118,27 @@ class CatblocksScriptFragment(
         return view
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun initWebView(catblocksWebview: WebView) {
         catblocksWebview.settings.javaScriptEnabled = true
-        WebView.setWebContentsDebuggingEnabled(true);
+
+        if (BuildConfig.FEATURE_CATBLOCKS_DEBUGABLE) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
 
         val assetLoader: WebViewAssetLoader = WebViewAssetLoader.Builder()
-            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(activity!!))
-            .addPathHandler("/res/", WebViewAssetLoader.ResourcesPathHandler(activity!!))
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(requireActivity()))
+            .addPathHandler("/res/", WebViewAssetLoader.ResourcesPathHandler(requireActivity()))
             .build()
 
-
         catblocksWebview.addJavascriptInterface(
-            JSInterface(currentProject, currentScene, currentSprite, currentScriptIndex),
-            "Android"
-        );
+            JSInterface(
+                currentProject,
+                currentScene,
+                currentSprite,
+                currentScriptIndex
+            ), "Android"
+        )
 
         catblocksWebview.webViewClient = object : WebViewClient() {
             @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -145,75 +149,104 @@ class CatblocksScriptFragment(
                 return assetLoader.shouldInterceptRequest(request.url)
             }
         }
-        catblocksWebview.loadUrl("https://appassets.androidplatform.net/assets/catblocks/index.html");
+        catblocksWebview.loadUrl("https://appassets.androidplatform.net/assets/catblocks/index.html")
     }
 
     class ReorderCallback : ValueCallback<String> {
 
-        override fun onReceiveValue(value: String?) {
+        override fun onReceiveValue(value: String?) { // do nothing
         }
     }
 
     class JSInterface(
-        private val project: Project?, private val scene: Scene?, private val sprite: Sprite?,
-        private val script: Int) {
+        private val project: Project?,
+        private val scene: Scene?,
+        private val sprite: Sprite?,
+        private val script: Int
+    ) {
 
         @JavascriptInterface
-        fun getCurrentProject():String {
+        fun getCurrentProject(): String {
             val projectXml = XstreamSerializer.getInstance().getXmlAsStringFromProject(project)
             return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n$projectXml"
         }
 
         @JavascriptInterface
-        fun getCurrentLanguage():String {
-            return Locale.getDefault().toString().replace("_", "-");
-        }
+        fun getCurrentLanguage(): String =
+            Locale.getDefault().toString().replace("_", "-")
 
         @JavascriptInterface
-        fun isRTL():Boolean {
+        fun isRTL(): Boolean {
             val directionality = Character.getDirectionality(Locale.getDefault().displayName[0])
             return directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
                 directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
         }
 
         @JavascriptInterface
-        fun getSceneNameToDisplay():String? {
-            if(scene != null) {
-                return scene.name.trim();
+        fun getSceneNameToDisplay(): String? {
+            if (scene != null) {
+                return scene.name.trim()
             }
-            return null;
+            return null
         }
 
         @JavascriptInterface
-        fun getSpriteNameToDisplay():String? {
-            if(sprite != null) {
-                return sprite.name.trim();
+        fun getSpriteNameToDisplay(): String? {
+            if (sprite != null) {
+                return sprite.name.trim()
             }
-            return null;
+            return null
         }
 
         @JavascriptInterface
-        fun getScriptIndexToDisplay():Int {
-            return script;
-        }
+        fun getScriptIndexToDisplay(): Int = script
 
+        @SuppressLint
         @JavascriptInterface
-        fun updateScriptPosition(strScriptId:String, x:String, y:String) {
-            if(project == null)
-                return;
+        fun updateScriptPosition(strScriptId: String, x: String, y: String) {
+            if (project == null) {
+                return
+            }
 
             val scriptId = UUID.fromString(strScriptId)
-            for(scene in project.sceneList) {
-                for(sprite in scene.spriteList) {
-                    for(script in sprite.scriptList) {
-                        if(script.scriptId == scriptId) {
-                            script.posX = x.toFloat()
-                            script.posY = y.toFloat()
-                            return
-                        }
-                    }
+            val posX = x.toFloat()
+            val posY = y.toFloat()
+
+            for (scene in project.sceneList) {
+                if (updateScriptPositionInScene(scriptId, posX, posY, scene)) {
+                    return
                 }
             }
+        }
+
+        private fun updateScriptPositionInScene(
+            scriptId: UUID,
+            x: Float,
+            y: Float,
+            scene: Scene
+        ): Boolean {
+            for (sprite in scene.spriteList) {
+                if (updateScriptPositionInSprite(scriptId, x, y, sprite)) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        private fun updateScriptPositionInSprite(
+            scriptId: UUID,
+            x: Float,
+            y: Float,
+            sprite: Sprite
+        ): Boolean {
+            for (script in sprite.scriptList) {
+                if (script.scriptId == scriptId) {
+                    script.posX = x
+                    script.posY = y
+                    return true
+                }
+            }
+            return false
         }
     }
 }

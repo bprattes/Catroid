@@ -31,15 +31,14 @@ import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import com.google.android.material.tabs.TabLayout.Tab
+import org.catrobat.catroid.BuildConfig
 import org.catrobat.catroid.ProjectManager
 import org.catrobat.catroid.R
-import org.catrobat.catroid.content.Project
-import org.catrobat.catroid.ui.SpriteActivity
 import org.catrobat.catroid.ui.SpriteActivity.FRAGMENT_LOOKS
 import org.catrobat.catroid.ui.SpriteActivity.FRAGMENT_SCRIPTS
+import org.catrobat.catroid.ui.SpriteActivity.FRAGMENT_SOUNDS
 import org.catrobat.catroid.ui.recyclerview.fragment.CatblocksScriptFragment
 import org.catrobat.catroid.ui.recyclerview.fragment.CatblocksScriptFragment.Companion.TAG
-import org.catrobat.catroid.ui.SpriteActivity.FRAGMENT_SOUNDS
 import org.catrobat.catroid.ui.recyclerview.fragment.LookListFragment
 import org.catrobat.catroid.ui.recyclerview.fragment.ScriptFragment
 import org.catrobat.catroid.ui.recyclerview.fragment.SoundListFragment
@@ -98,17 +97,20 @@ fun SpriteActivity.loadFragment(fragmentPosition: Int) {
         )
         else -> throw IllegalArgumentException("Invalid fragmentPosition in Activity.")
     }
+
     fragmentTransaction.commit()
 }
 
-private fun SpriteActivity.showScripts(fragmentTransaction:FragmentTransaction) {
+private fun SpriteActivity.showScripts(fragmentTransaction: FragmentTransaction) {
     val currentProject = ProjectManager.getInstance().currentProject
-    if (!SettingsFragment.useCatBlocks(this)) {
+    if (!BuildConfig.FEATURE_CATBLOCKS_ENABLED || !SettingsFragment.useCatBlocks(this)) {
+        // Classic 1D view
         fragmentTransaction.replace(
             R.id.fragment_container, ScriptFragment(currentProject),
             ScriptFragment.TAG
         )
     } else {
+        // start with 2D view
         val currentSprite = ProjectManager.getInstance().currentSprite
         val currentScene = ProjectManager.getInstance().currentlyEditedScene
         fragmentTransaction.replace(

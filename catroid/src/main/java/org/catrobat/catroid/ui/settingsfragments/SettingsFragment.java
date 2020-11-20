@@ -244,7 +244,6 @@ public class SettingsFragment extends PreferenceFragment {
 		});
 	}
 
-
 	public static boolean isEmroiderySharedPreferenceEnabled(Context context) {
 		return getBooleanSharedPreference(false, SETTINGS_SHOW_EMBROIDERY_BRICKS, context);
 	}
@@ -499,5 +498,4 @@ public class SettingsFragment extends PreferenceFragment {
 				.putBoolean(SETTINGS_USE_CATBLOCKS, useCatBlocks)
 				.apply();
 	}
-
 }
