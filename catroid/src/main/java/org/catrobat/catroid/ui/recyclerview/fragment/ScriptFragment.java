@@ -87,37 +87,72 @@ public class ScriptFragment extends ListFragment implements
 		BrickAdapter.SelectionListener, OnCategorySelectedListener {
 
 	public static final String TAG = ScriptFragment.class.getSimpleName();
-
-	@Retention(RetentionPolicy.SOURCE)
-	@IntDef({NONE, BACKPACK, COPY, DELETE, COMMENT, CATBLOCKS})
-	@interface ActionModeType {
-	}
-
-	public ScriptFragment(Project currentProject) {
-		this.currentProject = currentProject;
-	}
-
-	private Project currentProject;
-
 	private static final int NONE = 0;
 	private static final int BACKPACK = 1;
 	private static final int COPY = 2;
 	private static final int DELETE = 3;
 	private static final int COMMENT = 4;
 	private static final int CATBLOCKS = 5;
-
 	@ActionModeType
 	private int actionModeType = NONE;
-
 	private ActionMode actionMode;
 	private BrickAdapter adapter;
 	private BrickListView listView;
 	private BrickSpinner currentSpinner;
-
 	private ScriptController scriptController = new ScriptController();
 	private BrickController brickController = new BrickController();
-
 	private Parcelable savedListViewState;
+	private Brick brickToFocus;
+	private Script scriptToFocus;
+
+	public ScriptFragment(Brick brickToFocus) {
+		this.brickToFocus = brickToFocus;
+	}
+
+	public ScriptFragment() {
+	}
+
+	public ScriptFragment(Script scriptToFocus) {
+		this.scriptToFocus = scriptToFocus;
+	}
+
+	private void scrollToFocusItem() {
+		if (scriptToFocus == null && brickToFocus == null) {
+			return;
+		}
+
+		int scrollToIndex = -1;
+		for (int i = 0; i < listView.getAdapter().getCount(); ++i) {
+			Object item = listView.getItemAtPosition(i);
+			if (!(item instanceof Brick)) {
+				continue;
+			}
+			Brick b = (Brick) item;
+			if (brickToFocus != null && b == brickToFocus) {
+				scrollToIndex = i;
+				break;
+			}
+			if (scriptToFocus != null && b.getScript() == scriptToFocus) {
+				scrollToIndex = i;
+				break;
+			}
+		}
+		if (scrollToIndex == -1) {
+			return;
+		}
+		if (getActivity() != null) {
+			int finalScrollToIndex = scrollToIndex;
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					listView.setSelection(finalScrollToIndex);
+				}
+			});
+		}
+		// ensure scrolling only once
+		scriptToFocus = null;
+		brickToFocus = null;
+	}
 
 	@Override
 	public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -261,6 +296,8 @@ public class ScriptFragment extends ListFragment implements
 		if (savedListViewState != null) {
 			listView.onRestoreInstanceState(savedListViewState);
 		}
+
+		scrollToFocusItem();
 	}
 
 	@Override
@@ -700,13 +737,9 @@ public class ScriptFragment extends ListFragment implements
 			}
 		}
 
-		Sprite currentSprite = ProjectManager.getInstance().getCurrentSprite();
-		Scene currentScene = ProjectManager.getInstance().getCurrentlyEditedScene();
-
 		SettingsFragment.setUseCatBlocks(getContext(), true);
 
-		CatblocksScriptFragment catblocksFragment = new CatblocksScriptFragment(currentProject,
-				currentScene, currentSprite, scriptIndex);
+		CatblocksScriptFragment catblocksFragment = new CatblocksScriptFragment(scriptIndex);
 
 		FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
 		fragmentTransaction.replace(R.id.fragment_container, catblocksFragment,
@@ -750,5 +783,10 @@ public class ScriptFragment extends ListFragment implements
 			brick.setCommentedOut(selectedBricks.contains(brick));
 		}
 		finishActionMode();
+	}
+
+	@Retention(RetentionPolicy.SOURCE)
+	@IntDef({NONE, BACKPACK, COPY, DELETE, COMMENT, CATBLOCKS})
+	@interface ActionModeType {
 	}
 }

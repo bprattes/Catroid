@@ -102,11 +102,10 @@ fun SpriteActivity.loadFragment(fragmentPosition: Int) {
 }
 
 private fun SpriteActivity.showScripts(fragmentTransaction: FragmentTransaction) {
-    val currentProject = ProjectManager.getInstance().currentProject
     if (!BuildConfig.FEATURE_CATBLOCKS_ENABLED || !SettingsFragment.useCatBlocks(this)) {
         // Classic 1D view
         fragmentTransaction.replace(
-            R.id.fragment_container, ScriptFragment(currentProject),
+            R.id.fragment_container, ScriptFragment(),
             ScriptFragment.TAG
         )
     } else {
@@ -115,14 +114,12 @@ private fun SpriteActivity.showScripts(fragmentTransaction: FragmentTransaction)
         val currentScene = ProjectManager.getInstance().currentlyEditedScene
         fragmentTransaction.replace(
             R.id.fragment_container,
-            CatblocksScriptFragment(
-                currentProject, currentScene,
-                currentSprite, 0
-            ),
+            CatblocksScriptFragment(0),
             TAG
         )
     }
 }
+
 fun Fragment?.getTabPositionInSpriteActivity(): Int = when (this) {
     is ScriptFragment -> FRAGMENT_SCRIPTS
     is LookListFragment -> FRAGMENT_LOOKS
@@ -130,7 +127,8 @@ fun Fragment?.getTabPositionInSpriteActivity(): Int = when (this) {
     else -> FRAGMENT_SCRIPTS
 }
 
-private fun unableToSelectNewFragmentFromCurrent(fragment: Fragment?) = fragment is ScriptFragment && fragment.isCurrentlyMoving
+private fun unableToSelectNewFragmentFromCurrent(fragment: Fragment?) =
+    fragment is ScriptFragment && fragment.isCurrentlyMoving
 
 private fun SpriteActivity?.setTabSelection(fragment: Fragment?) {
     val tabLayout = this?.findViewById<TabLayout?>(R.id.tab_layout)

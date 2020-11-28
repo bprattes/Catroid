@@ -36,24 +36,24 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.webkit.WebViewAssetLoader
 import org.catrobat.catroid.BuildConfig
+import org.catrobat.catroid.ProjectManager
 import org.catrobat.catroid.R
-import org.catrobat.catroid.content.Project
 import org.catrobat.catroid.content.Scene
+import org.catrobat.catroid.content.Script
 import org.catrobat.catroid.content.Sprite
+import org.catrobat.catroid.content.bricks.Brick
+import org.catrobat.catroid.content.bricks.CompositeBrick
 import org.catrobat.catroid.io.XstreamSerializer
 import org.catrobat.catroid.ui.BottomBar
 import org.catrobat.catroid.ui.settingsfragments.SettingsFragment
+import org.koin.java.KoinJavaComponent.inject
 import java.util.Locale
 import java.util.UUID
 
 class CatblocksScriptFragment(
-    private val currentProject: Project?,
-    private val currentScene: Scene?,
-    private val currentSprite: Sprite?,
     private val currentScriptIndex: Int
 ) : Fragment() {
 
@@ -74,14 +74,7 @@ class CatblocksScriptFragment(
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.catblocks) {
-            SettingsFragment.setUseCatBlocks(context, false)
-
-            val fragmentTransaction = parentFragmentManager?.beginTransaction()
-            fragmentTransaction?.replace(
-                R.id.fragment_container, ScriptFragment(currentProject),
-                ScriptFragment.TAG
-            )
-            fragmentTransaction?.commit()
+            activity?.runOnUiThread(SwitchTo1DHelper())
 
             return true
         } else if (item.itemId == R.id.catblocks_reorder_scripts) {
@@ -89,13 +82,6 @@ class CatblocksScriptFragment(
             webview!!.evaluateJavascript("javascript:CatBlocks.reorderCurrentScripts();", callback)
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        val actionBar = (activity as AppCompatActivity?)!!.supportActionBar
-        actionBar?.title = currentProject?.name
     }
 
     override fun onCreateView(
@@ -131,9 +117,6 @@ class CatblocksScriptFragment(
 
         catblocksWebView.addJavascriptInterface(
             JSInterface(
-                currentProject,
-                currentScene,
-                currentSprite,
                 currentScriptIndex
             ), "Android"
         )
@@ -155,16 +138,41 @@ class CatblocksScriptFragment(
         }
     }
 
-    class JSInterface(
-        private val project: Project?,
-        private val scene: Scene?,
-        private val sprite: Sprite?,
-        private val script: Int
-    ) {
+    inner class SwitchTo1DHelper : Runnable {
+
+        var brickHelper: JSInterface.BrickHelper? = null
+
+        override fun run() {
+            SettingsFragment.setUseCatBlocks(context, false)
+
+            var scriptFragment: ScriptFragment;
+            if (brickHelper?.brick != null) {
+                scriptFragment = ScriptFragment(brickHelper!!.brick)
+            } else if (brickHelper != null && brickHelper!!.brickIsScript &&
+                brickHelper?.script != null
+            ) {
+                scriptFragment = ScriptFragment(brickHelper!!.script)
+            } else {
+                scriptFragment = ScriptFragment()
+            }
+
+            val fragmentTransaction = parentFragmentManager.beginTransaction()
+            fragmentTransaction.replace(
+                R.id.fragment_container, scriptFragment,
+                ScriptFragment.TAG
+            )
+            fragmentTransaction.commit()
+        }
+    }
+
+    inner class JSInterface(private val script: Int) {
+
+        val projectManager = inject(ProjectManager::class.java).value
 
         @JavascriptInterface
         fun getCurrentProject(): String {
-            val projectXml = XstreamSerializer.getInstance().getXmlAsStringFromProject(project)
+            val projectXml = XstreamSerializer.getInstance()
+                .getXmlAsStringFromProject(projectManager.currentProject)
             return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n$projectXml"
         }
 
@@ -181,18 +189,12 @@ class CatblocksScriptFragment(
 
         @JavascriptInterface
         fun getSceneNameToDisplay(): String? {
-            if (scene != null) {
-                return scene.name.trim()
-            }
-            return null
+            return projectManager.currentlyEditedScene?.name?.trim()
         }
 
         @JavascriptInterface
         fun getSpriteNameToDisplay(): String? {
-            if (sprite != null) {
-                return sprite.name.trim()
-            }
-            return null
+            return projectManager.currentSprite?.name?.trim()
         }
 
         @JavascriptInterface
@@ -201,7 +203,7 @@ class CatblocksScriptFragment(
         @SuppressLint
         @JavascriptInterface
         fun updateScriptPosition(strScriptId: String, x: String, y: String) {
-            if (project == null) {
+            if (projectManager.currentProject == null) {
                 return
             }
 
@@ -209,13 +211,14 @@ class CatblocksScriptFragment(
             val posX = x.toFloat()
             val posY = y.toFloat()
 
-            for (scene in project.sceneList) {
+            for (scene in projectManager.currentProject.sceneList) {
                 if (updateScriptPositionInScene(scriptId, posX, posY, scene)) {
                     return
                 }
             }
         }
 
+        // region update script position helpers
         private fun updateScriptPositionInScene(
             scriptId: UUID,
             x: Float,
@@ -244,6 +247,90 @@ class CatblocksScriptFragment(
                 }
             }
             return false
+        }
+        // endregion
+
+        @JavascriptInterface
+        fun switchTo1D(strClickedBrickId: String) {
+            val brickId = UUID.fromString(strClickedBrickId)
+
+            var brickHelper =
+                locateBrickInSprite(projectManager.currentSprite, brickId)
+
+            if (brickHelper != null) {
+                val switchTo1DHelper = SwitchTo1DHelper()
+                switchTo1DHelper.brickHelper = brickHelper
+                activity?.runOnUiThread(switchTo1DHelper)
+            }
+        }
+
+        inner class BrickHelper {
+            var brickIsScript: Boolean = false
+            var script: Script? = null
+            var brick: Brick? = null
+        }
+
+        private fun locateBrickInSprite(sprite: Sprite, brickId: UUID): BrickHelper? {
+            for (script in sprite.scriptList) {
+
+                if (script.scriptId == brickId) {
+                    val brickHelper = BrickHelper()
+                    brickHelper.brickIsScript = true
+                    brickHelper.script = script
+                    return brickHelper
+                }
+
+                val tmpBrickHelper =
+                    locateBrickInScript(brickId, script)
+                if (tmpBrickHelper?.brick != null) {
+                    tmpBrickHelper.script = script
+                    return tmpBrickHelper
+                }
+            }
+            return null
+        }
+
+        private fun locateBrickInScript(brickId: UUID, script: Script): BrickHelper? {
+            for (brick in script.brickList) {
+                val brickHelper = checkBrick(brickId, brick)
+                if (brickHelper != null) {
+                    return brickHelper
+                }
+            }
+            return null
+        }
+
+        private fun checkBrick(brickId: UUID, brick: Brick): BrickHelper? {
+            if (brick.brickID == brickId) {
+                val brickHelper = BrickHelper()
+                brickHelper.brick = brick
+                return brickHelper
+            }
+
+            if (brick !is CompositeBrick) {
+                return null
+            }
+
+            val compositeBrick = brick as CompositeBrick
+            for (childBrick in compositeBrick.nestedBricks) {
+                val brickHelper = checkBrick(brickId, childBrick)
+                if (brickHelper != null) {
+                    return brickHelper
+                }
+            }
+
+            if (!compositeBrick.hasSecondaryList()) {
+                return null
+            }
+
+            for (childBrick in compositeBrick.secondaryNestedBricks) {
+                val brickHelper = checkBrick(brickId, childBrick)
+                if (brickHelper != null) {
+                    return brickHelper
+                }
+            }
+
+            return null
         }
     }
 }
