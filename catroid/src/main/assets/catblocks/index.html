@@ -19,27 +19,12 @@
   <body>
     <div id="catblocks-program-container"></div>
     <script>
-      window.onload = function () {
-        CatBlocks.init({
-          container: 'catblocks-program-container',
-          renderSize: 0.75,
-          language: Android.getCurrentLanguage(),
-          rtl: Android.isRTL(),
-          shareRoot: 'https://appassets.androidplatform.net/assets/catblocks',
-          media: 'https://appassets.androidplatform.net/assets/catblocks/media',
-          i18n: 'https://appassets.androidplatform.net/assets/catblocks/i18n',
-          noImageFound: 'No_Image_Available.jpg',
-          renderLooks: false,
-          renderSounds: false,
-          readOnly: false
-        }).then(() => {
-          const programXML = Android.getCurrentProject();
-          console.log(programXML);
-          const scene = Android.getSceneNameToDisplay();
-          const object = Android.getSpriteNameToDisplay();
-          const script = Android.getScriptIndexToDisplay();
-          CatBlocks.renderForAndroid(programXML, 'share', scene, object, script);
-        });
+      window.executeSomething = function() {
+        const d = new Date();
+        const str = `from JS: ${d.getDate()}.${d.getMonth()}.${d.getFullYear()} ${d.getHours()}:${d
+        .getMinutes()}:${d.getSeconds()}`;
+        console.log(str);
+        return str;
       };
     </script>
     <script

@@ -64,7 +64,7 @@
          app:showAsAction="never"
          />
     <item android:id="@+id/catblocks_reorder_scripts"
-        android:title="@string/catblocks_reorder"
+        android:title="TEST show JS time"
         app:showAsAction="never"
         />
 </menu>

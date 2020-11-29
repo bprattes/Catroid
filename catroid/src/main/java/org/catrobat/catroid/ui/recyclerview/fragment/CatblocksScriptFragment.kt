@@ -36,6 +36,9 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.webkit.WebViewAssetLoader
@@ -46,6 +49,7 @@ import org.catrobat.catroid.content.Scene
 import org.catrobat.catroid.content.Sprite
 import org.catrobat.catroid.io.XstreamSerializer
 import org.catrobat.catroid.ui.BottomBar
+import org.catrobat.catroid.ui.SpriteActivity
 import org.catrobat.catroid.ui.settingsfragments.SettingsFragment
 import java.util.Locale
 import java.util.UUID
@@ -55,7 +59,7 @@ class CatblocksScriptFragment(
     private val currentScene: Scene?,
     private val currentSprite: Sprite?,
     private val currentScriptIndex: Int
-) : Fragment() {
+) : Fragment(), View.OnClickListener {
 
     private var webview: WebView? = null
 
@@ -70,6 +74,7 @@ class CatblocksScriptFragment(
         menu.removeItem(R.id.delete)
         menu.removeItem(R.id.rename)
         menu.removeItem(R.id.show_details)
+        menu.removeItem(R.id.catblocks_reorder_scripts)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -84,9 +89,6 @@ class CatblocksScriptFragment(
             fragmentTransaction?.commit()
 
             return true
-        } else if (item.itemId == R.id.catblocks_reorder_scripts) {
-            val callback = ReorderCallback()
-            webview!!.evaluateJavascript("javascript:CatBlocks.reorderCurrentScripts();", callback)
         }
         return super.onOptionsItemSelected(item)
     }
@@ -113,6 +115,8 @@ class CatblocksScriptFragment(
         val webView = view.findViewById<WebView>(R.id.catblocksWebView)
         initWebView(webView)
         this.webview = webView
+
+        view.findViewById<Button>(R.id.jsButton).setOnClickListener(this)
         return view
     }
 
@@ -129,15 +133,6 @@ class CatblocksScriptFragment(
             .addPathHandler("/res/", WebViewAssetLoader.ResourcesPathHandler(requireActivity()))
             .build()
 
-        catblocksWebView.addJavascriptInterface(
-            JSInterface(
-                currentProject,
-                currentScene,
-                currentSprite,
-                currentScriptIndex
-            ), "Android"
-        )
-
         catblocksWebView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
                 view: WebView,
@@ -149,101 +144,16 @@ class CatblocksScriptFragment(
         catblocksWebView.loadUrl("https://appassets.androidplatform.net/assets/catblocks/index.html")
     }
 
-    class ReorderCallback : ValueCallback<String> {
-
-        override fun onReceiveValue(value: String?) { // do nothing
+    inner class ReorderCallback() : ValueCallback<String> {
+        override fun onReceiveValue(value: String?) {
+            val replaced = value?.replace("\"", "")
+            view?.findViewById<TextView>(R.id.jsTxt)?.text = replaced
+            println(replaced)
         }
     }
 
-    class JSInterface(
-        private val project: Project?,
-        private val scene: Scene?,
-        private val sprite: Sprite?,
-        private val script: Int
-    ) {
-
-        @JavascriptInterface
-        fun getCurrentProject(): String {
-            val projectXml = XstreamSerializer.getInstance().getXmlAsStringFromProject(project)
-            return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n$projectXml"
-        }
-
-        @JavascriptInterface
-        fun getCurrentLanguage(): String =
-            Locale.getDefault().toString().replace("_", "-")
-
-        @JavascriptInterface
-        fun isRTL(): Boolean {
-            val directionality = Character.getDirectionality(Locale.getDefault().displayName[0])
-            return directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
-                directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
-        }
-
-        @JavascriptInterface
-        fun getSceneNameToDisplay(): String? {
-            if (scene != null) {
-                return scene.name.trim()
-            }
-            return null
-        }
-
-        @JavascriptInterface
-        fun getSpriteNameToDisplay(): String? {
-            if (sprite != null) {
-                return sprite.name.trim()
-            }
-            return null
-        }
-
-        @JavascriptInterface
-        fun getScriptIndexToDisplay(): Int = script
-
-        @SuppressLint
-        @JavascriptInterface
-        fun updateScriptPosition(strScriptId: String, x: String, y: String) {
-            if (project == null) {
-                return
-            }
-
-            val scriptId = UUID.fromString(strScriptId)
-            val posX = x.toFloat()
-            val posY = y.toFloat()
-
-            for (scene in project.sceneList) {
-                if (updateScriptPositionInScene(scriptId, posX, posY, scene)) {
-                    return
-                }
-            }
-        }
-
-        private fun updateScriptPositionInScene(
-            scriptId: UUID,
-            x: Float,
-            y: Float,
-            scene: Scene
-        ): Boolean {
-            for (sprite in scene.spriteList) {
-                if (updateScriptPositionInSprite(scriptId, x, y, sprite)) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        private fun updateScriptPositionInSprite(
-            scriptId: UUID,
-            x: Float,
-            y: Float,
-            sprite: Sprite
-        ): Boolean {
-            for (script in sprite.scriptList) {
-                if (script.scriptId == scriptId) {
-                    script.posX = x
-                    script.posY = y
-                    return true
-                }
-            }
-            return false
-        }
+    override fun onClick(v: View?) {
+        val callback = ReorderCallback()
+        webview!!.evaluateJavascript("javascript:window.executeSomething();", callback)
     }
 }
