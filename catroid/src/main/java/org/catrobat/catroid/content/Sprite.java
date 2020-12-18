@@ -152,7 +152,7 @@ public class Sprite implements Cloneable, Nameable, Serializable {
 		if (userDefinedBrick == null) {
 			return null;
 		}
-		for (Brick brick: userDefinedBrickList) {
+		for (Brick brick : userDefinedBrickList) {
 			if (((UserDefinedBrick) brick).isUserDefinedBrickDataEqual(userDefinedBrick)) {
 				return (UserDefinedBrick) brick;
 			}
@@ -570,5 +570,23 @@ public class Sprite implements Cloneable, Nameable, Serializable {
 			}
 		}
 		usedTouchPointer.clear();
+	}
+
+	public List<UUID> removeAllEmptyDummyScripts() {
+		List<UUID> idsToRemove = new ArrayList<>();
+		List<Script> scriptsToRemove = new ArrayList<>();
+
+		for (Script s : scriptList) {
+			if (s instanceof DummyScript && (s.brickList == null || s.brickList.isEmpty())) {
+				scriptsToRemove.add(s);
+				idsToRemove.add(s.getScriptId());
+			}
+		}
+
+		for (Script toRemove : scriptsToRemove) {
+			scriptList.remove(toRemove);
+		}
+
+		return idsToRemove;
 	}
 }

@@ -156,3 +156,7 @@ img {
   width: 100%;
 }
 
+.catblockls-blockly-invisible>.blocklyPath {
+  fill-opacity: 0;
+  stroke-opacity: 0;
+}
