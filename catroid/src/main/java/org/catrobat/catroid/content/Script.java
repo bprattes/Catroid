@@ -219,4 +219,73 @@ public abstract class Script implements Serializable, Cloneable {
 			}
 		}
 	}
+
+	private List<Brick> findBricksInScript(List<UUID> brickIds) {
+		List<Brick> bricks = new ArrayList<>();
+
+		for (Brick b : brickList) {
+			if (brickIds.contains(b.getBrickID())) {
+				bricks.add(b);
+			} else if (b instanceof CompositeBrick) {
+				List<Brick> tmpBricks = b.findBricksInNestedBricks(brickIds);
+				if (tmpBricks != null) {
+					return tmpBricks;
+				}
+			}
+
+			if (bricks.size() == brickIds.size()) {
+				return bricks;
+			}
+		}
+
+		if (bricks.size() > 0) {
+			return bricks;
+		}
+		return null;
+	}
+
+	public List<Brick> removeBricksFromScript(List<UUID> brickIds) {
+		List<Brick> bricks = findBricksInScript(brickIds);
+
+		if (bricks != null) {
+			for (Brick b : bricks) {
+				removeBrick(b);
+			}
+		}
+
+		return bricks;
+	}
+
+	public boolean insertBrickAfter(UUID parentId, int subStackIdx, List<Brick> bricksToAdd) {
+
+		// only if the sub stack index is -1, the brick can be a direct child of the script brick
+
+		if(subStackIdx == -1) {
+			if (scriptId.equals(parentId) || getScriptBrick().getBrickID().equals(parentId)) {
+				brickList.addAll(0, bricksToAdd);
+				return true;
+			}
+
+			boolean found = false;
+			int idx = 0;
+			for (Brick b : brickList) {
+				++idx;
+				if (b.getBrickID().equals(parentId)) {
+					found = true;
+					break;
+				}
+			}
+			if (found) {
+				brickList.addAll(idx, bricksToAdd);
+				return true;
+			}
+		}
+
+		for (Brick b : brickList) {
+			if (b.addBrickInNestedBrick(parentId, subStackIdx, bricksToAdd)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

@@ -84,6 +84,7 @@ import org.catrobat.catroid.content.bricks.DroneSwitchCameraBrick;
 import org.catrobat.catroid.content.bricks.DroneTakeOffLandBrick;
 import org.catrobat.catroid.content.bricks.DroneTurnLeftBrick;
 import org.catrobat.catroid.content.bricks.DroneTurnRightBrick;
+import org.catrobat.catroid.content.bricks.DummyBrick;
 import org.catrobat.catroid.content.bricks.ExitStageBrick;
 import org.catrobat.catroid.content.bricks.FinishStageBrick;
 import org.catrobat.catroid.content.bricks.FlashBrick;
@@ -317,6 +318,8 @@ public class CategoryBricksFactory {
 		eventBrickList.add(new WhenStartedBrick());
 		eventBrickList.add(new WhenBrick());
 		eventBrickList.add(new WhenTouchDownBrick());
+
+		eventBrickList.add(new DummyBrick());
 
 		Project currentProject = ProjectManager.getInstance().getCurrentProject();
 		List<String> broadcastMessages = currentProject.getBroadcastMessageContainer().getBroadcastMessages();

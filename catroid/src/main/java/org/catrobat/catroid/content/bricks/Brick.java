@@ -207,4 +207,8 @@ public interface Brick extends Serializable, Cloneable {
 	String getHelpUrl(String category);
 
 	UUID getBrickID();
+
+	List<Brick> findBricksInNestedBricks(List<UUID> brickIds);
+
+	boolean addBrickInNestedBrick(UUID parentBrickId, int subStackIndex, List<Brick> bricksToAdd);
 }

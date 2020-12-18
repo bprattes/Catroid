@@ -38,6 +38,7 @@ import org.catrobat.catroid.common.NfcTagData;
 import org.catrobat.catroid.common.ProjectData;
 import org.catrobat.catroid.common.SoundInfo;
 import org.catrobat.catroid.content.BroadcastScript;
+import org.catrobat.catroid.content.DummyScript;
 import org.catrobat.catroid.content.GroupItemSprite;
 import org.catrobat.catroid.content.GroupSprite;
 import org.catrobat.catroid.content.LegoNXTSetting;
@@ -389,6 +390,7 @@ public final class XstreamSerializer {
 		xstream.alias("script", WhenTouchDownScript.class);
 		xstream.alias("script", WhenBackgroundChangesScript.class);
 		xstream.alias("script", UserDefinedScript.class);
+		xstream.alias("script", DummyScript.class);
 
 		xstream.alias("brick", AddItemToUserListBrick.class);
 		xstream.alias("brick", AskBrick.class);

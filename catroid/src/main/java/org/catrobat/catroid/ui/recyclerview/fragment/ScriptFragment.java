@@ -44,6 +44,7 @@ import org.catrobat.catroid.content.Script;
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.StartScript;
 import org.catrobat.catroid.content.bricks.Brick;
+import org.catrobat.catroid.content.bricks.DummyBrick;
 import org.catrobat.catroid.content.bricks.FormulaBrick;
 import org.catrobat.catroid.content.bricks.ScriptBrick;
 import org.catrobat.catroid.content.bricks.UserDefinedReceiverBrick;
@@ -547,18 +548,25 @@ public class ScriptFragment extends ListFragment implements
 
 		if (brick instanceof ScriptBrick) {
 			items.add(R.string.backpack_add);
-			items.add(R.string.brick_context_dialog_copy_script);
-			items.add(R.string.brick_context_dialog_delete_script);
 
-			items.add(brick.isCommentedOut()
-					? R.string.brick_context_dialog_comment_in_script
-					: R.string.brick_context_dialog_comment_out_script);
+			if(!(brick instanceof DummyBrick)) {
+				items.add(brick.isCommentedOut()
+						? R.string.brick_context_dialog_comment_in_script
+						: R.string.brick_context_dialog_comment_out_script);
+
+				items.add(R.string.brick_context_dialog_copy_script);
+			}
+
+			items.add(R.string.brick_context_dialog_delete_script);
 
 			if (brick instanceof FormulaBrick) {
 				items.add(R.string.brick_context_dialog_formula_edit_brick);
 			}
 			items.add(R.string.brick_context_dialog_move_script);
-			items.add(R.string.brick_context_dialog_help);
+
+			if(!(brick instanceof DummyBrick)) {
+				items.add(R.string.brick_context_dialog_help);
+			}
 		} else {
 			items.add(R.string.brick_context_dialog_copy_brick);
 			if (brick.consistsOfMultipleParts()) {

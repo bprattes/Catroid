@@ -33,6 +33,7 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.content.Script;
 import org.catrobat.catroid.ui.recyclerview.fragment.ScriptFragment;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -205,5 +206,124 @@ public abstract class BrickBaseType implements Brick {
 	@Override
 	public UUID getBrickID() {
 		return brickId;
+	}
+
+	@Override
+	public List<Brick> findBricksInNestedBricks(List<UUID> brickIds) {
+		if (!(this instanceof CompositeBrick)) {
+			return null;
+		}
+
+		List<Brick> foundBricks = new ArrayList<>();
+		CompositeBrick cb = (CompositeBrick) this;
+
+		for (Brick b : cb.getNestedBricks()) {
+			if (brickIds.contains(b.getBrickID())) {
+				foundBricks.add(b);
+			} else if (b instanceof CompositeBrick) {
+				List<Brick> tmpBricks = b.findBricksInNestedBricks(brickIds);
+				if (tmpBricks != null) {
+					return tmpBricks;
+				}
+			}
+
+			if (brickIds.size() == foundBricks.size()) {
+				break;
+			}
+		}
+
+		if (foundBricks.size() == 0 && cb.hasSecondaryList()) {
+			for (Brick b : cb.getSecondaryNestedBricks()) {
+				if (brickIds.contains(b.getBrickID())) {
+					foundBricks.add(b);
+				} else if (b instanceof CompositeBrick) {
+					List<Brick> tmpBricks = b.findBricksInNestedBricks(brickIds);
+					if (tmpBricks != null) {
+						return tmpBricks;
+					}
+				}
+
+				if (brickIds.size() == foundBricks.size()) {
+					break;
+				}
+			}
+		}
+
+		if (foundBricks.size() > 0) {
+			return foundBricks;
+		}
+		return null;
+	}
+
+	@Override
+	public boolean addBrickInNestedBrick(UUID parentBrickId, int subStackIndex, List<Brick> bricksToAdd) {
+		if (!(this instanceof CompositeBrick)) {
+			return false;
+		}
+
+		// if subStackIndex == -1, the first brick to add is no first sub stack item!
+
+		CompositeBrick cb = (CompositeBrick) this;
+
+		if (getBrickID().equals(parentBrickId)) {
+			if (subStackIndex == 0) {
+				cb.getNestedBricks().addAll(0, bricksToAdd);
+				return true;
+			} else if (subStackIndex == 1 && cb.hasSecondaryList()) {
+				cb.getSecondaryNestedBricks().addAll(0, bricksToAdd);
+				return true;
+			}
+		}
+
+		int idx = 0;
+
+		for (Brick b : cb.getNestedBricks()) {
+			++idx;
+			if (subStackIndex == -1 &&
+					b.getBrickID().equals(parentBrickId)) {
+				cb.getNestedBricks().addAll(idx, bricksToAdd);
+			} else if (b instanceof CompositeBrick) {
+				if (b.addBrickInNestedBrick(parentBrickId, subStackIndex, bricksToAdd)) {
+					return true;
+				}
+			}
+//			if(!(b instanceof CompositeBrick)
+//					&& subStackIndex == 0
+//					&& b.getBrickID().equals(parentBrickId)) {
+//				cb.getNestedBricks().addAll(idx, bricksToAdd);
+//				return true;
+//			} else if(b instanceof CompositeBrick) {
+//				if(b.addBrickInNestedBrick(parentBrickId, subStackIndex, bricksToAdd)) {
+//					return true;
+//				}
+//			}
+		}
+
+		if (!cb.hasSecondaryList()) {
+			return false;
+		}
+
+		idx = 0;
+		for (Brick b : cb.getSecondaryNestedBricks()) {
+			++idx;
+			if (subStackIndex == -1 &&
+					b.getBrickID().equals(parentBrickId)) {
+				cb.getSecondaryNestedBricks().addAll(idx, bricksToAdd);
+			} else if (b instanceof CompositeBrick) {
+				if (b.addBrickInNestedBrick(parentBrickId, subStackIndex, bricksToAdd)) {
+					return true;
+				}
+			}
+//			if(subStackIndex == 1 && b.getBrickID().equals(parentBrickId)) {
+//				cb.getNestedBricks().addAll(idx, bricksToAdd);
+//				return true;
+//			} else if(b instanceof CompositeBrick) {
+//				if(b.addBrickInNestedBrick(parentBrickId, subStackIndex, bricksToAdd)) {
+//					return true;
+//				}
+//			}
+		}
+
+		return false;
 	}
 }

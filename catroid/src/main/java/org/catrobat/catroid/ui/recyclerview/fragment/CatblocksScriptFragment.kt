@@ -46,9 +46,11 @@ import org.catrobat.catroid.content.Script
 import org.catrobat.catroid.content.Sprite
 import org.catrobat.catroid.content.bricks.Brick
 import org.catrobat.catroid.content.bricks.CompositeBrick
+import org.catrobat.catroid.content.bricks.DummyBrick
 import org.catrobat.catroid.io.XstreamSerializer
 import org.catrobat.catroid.ui.BottomBar
 import org.catrobat.catroid.ui.settingsfragments.SettingsFragment
+import org.json.JSONArray
 import org.koin.java.KoinJavaComponent.inject
 import java.util.Locale
 import java.util.UUID
@@ -208,8 +210,8 @@ class CatblocksScriptFragment(
             }
 
             val scriptId = UUID.fromString(strScriptId)
-            val posX = x.toFloat()
-            val posY = y.toFloat()
+            var posX: Float = x.toFloat()
+            var posY: Float = y.toFloat()
 
             for (scene in projectManager.currentProject.sceneList) {
                 if (updateScriptPositionInScene(scriptId, posX, posY, scene)) {
@@ -249,6 +251,72 @@ class CatblocksScriptFragment(
             return false
         }
         // endregion
+
+        @JavascriptInterface
+        fun addDummyBrick(brickStrIdsToMove: Array<String>): String {
+            val dummyBrick = DummyBrick()
+
+            val brickIdsToMove = mutableListOf<UUID>()
+            for (strId in brickStrIdsToMove) {
+                brickIdsToMove.add(UUID.fromString(strId))
+            }
+
+            for (script in projectManager.currentSprite.scriptList) {
+
+                val foundBricks = script
+                    .removeBricksFromScript(brickIdsToMove)
+
+                if (foundBricks != null) {
+                    dummyBrick.script.brickList.addAll(foundBricks)
+                    break
+                }
+            }
+
+            projectManager.currentSprite.scriptList.add(dummyBrick.script)
+            return dummyBrick.script.scriptId.toString()
+        }
+
+        @JavascriptInterface
+        fun moveBricksToScript(
+            newParentStrId: String,
+            parentSubStackIdx: Int,
+            brickStrIdsToMove: Array<String>
+        ): Boolean {
+            val brickIdsToMove = mutableListOf<UUID>()
+            for (strId in brickStrIdsToMove) {
+                brickIdsToMove.add(UUID.fromString(strId))
+            }
+
+            val newParentId = UUID.fromString(newParentStrId)
+
+            var bricksToMove: List<Brick>? = null
+            for (script in projectManager.currentSprite.scriptList) {
+                bricksToMove = script.removeBricksFromScript(brickIdsToMove)
+                if (bricksToMove != null) {
+                    break
+                }
+            }
+
+            if (bricksToMove == null) {
+                return false
+            }
+
+            println(bricksToMove.size)
+
+            for (script in projectManager.currentSprite.scriptList) {
+                if (script.insertBrickAfter(newParentId, parentSubStackIdx, bricksToMove)) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        @JavascriptInterface
+        fun removeEmptyDummyBricks(): String {
+            val removed = projectManager.currentSprite.removeAllEmptyDummyScripts();
+            return JSONArray(removed).toString()
+        }
 
         @JavascriptInterface
         fun switchTo1D(strClickedBrickId: String) {
