@@ -85,7 +85,8 @@ import androidx.fragment.app.ListFragment;
 public class ScriptFragment extends ListFragment implements
 		ActionMode.Callback,
 		BrickAdapter.OnItemClickListener,
-		BrickAdapter.SelectionListener, OnCategorySelectedListener {
+		BrickAdapter.SelectionListener, OnCategorySelectedListener,
+		AddBrickFragment.OnAddBrickListener {
 
 	public static final String TAG = ScriptFragment.class.getSimpleName();
 	private static final int NONE = 0;
@@ -485,6 +486,7 @@ public class ScriptFragment extends ListFragment implements
 		}
 	}
 
+	@Override
 	public void addBrick(Brick brick) {
 		Sprite sprite = ProjectManager.getInstance().getCurrentSprite();
 		addBrick(brick, sprite, adapter, listView);

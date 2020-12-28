@@ -319,8 +319,6 @@ public class CategoryBricksFactory {
 		eventBrickList.add(new WhenBrick());
 		eventBrickList.add(new WhenTouchDownBrick());
 
-		eventBrickList.add(new DummyBrick());
-
 		Project currentProject = ProjectManager.getInstance().getCurrentProject();
 		List<String> broadcastMessages = currentProject.getBroadcastMessageContainer().getBroadcastMessages();
 		String broadcastMessage = context.getString(R.string.brick_broadcast_default_value);
