@@ -410,6 +410,24 @@ class CatblocksScriptFragment(
 
             return null
         }
+
+        @JavascriptInterface
+        fun removeBricks(brickStrIdsToRemove: Array<String>) {
+            val brickIdsToRemove = arrayListOf<UUID>()
+            for (strId in brickStrIdsToRemove) {
+                brickIdsToRemove.add(UUID.fromString(strId))
+            }
+
+            for (script in projectManager.currentSprite.scriptList) {
+                if (brickIdsToRemove.contains(script.scriptId)) {
+                    projectManager.currentSprite.scriptList.remove(script)
+                    break
+                }
+                if (script.removeBricksFromScript(brickIdsToRemove) != null) {
+                    break
+                }
+            }
+        }
     }
 
     fun handleAddButton() {
@@ -447,22 +465,31 @@ class CatblocksScriptFragment(
     }
 
     override fun addBrick(brick: Brick?) {
-        if(brick == null) {
+        if (brick == null) {
             return
         }
 
         val addedBricks = arrayListOf<BrickInfoHolder>()
 
-        if(brick is ScriptBrickBaseType) {
+        if (brick is ScriptBrickBaseType) {
             projectManager.currentSprite.scriptList.add(brick.script)
-            addedBricks.add(BrickInfoHolder(brick.script.scriptId.toString(), brick.script.javaClass.simpleName))
+            addedBricks.add(
+                BrickInfoHolder(
+                    brick.script.scriptId.toString(),
+                    brick.script.javaClass.simpleName
+                )
+            )
         } else {
             val dummyBrick = DummyBrick()
             dummyBrick.script.brickList.add(brick)
             projectManager.currentSprite.scriptList.add(dummyBrick.script)
 
-            addedBricks.add(BrickInfoHolder(dummyBrick.script.scriptId.toString(),
-                                 dummyBrick.script.javaClass.simpleName))
+            addedBricks.add(
+                BrickInfoHolder(
+                    dummyBrick.script.scriptId.toString(),
+                    dummyBrick.script.javaClass.simpleName
+                )
+            )
 
             addedBricks.add(BrickInfoHolder(brick.brickID.toString(), brick.javaClass.simpleName))
         }
@@ -474,6 +501,7 @@ class CatblocksScriptFragment(
     private class BrickInfoHolder(brickId: String, brickType: String) {
         @SerializedName("brickId")
         val brickId: String = brickId
+
         @SerializedName("brickType")
         val brickType: String = brickType
     }
