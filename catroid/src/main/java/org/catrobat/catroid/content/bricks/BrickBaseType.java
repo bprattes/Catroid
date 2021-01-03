@@ -29,13 +29,17 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
+
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.content.Script;
 import org.catrobat.catroid.ui.recyclerview.fragment.ScriptFragment;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import androidx.annotation.CallSuper;
@@ -208,6 +212,7 @@ public abstract class BrickBaseType implements Brick {
 		return brickId;
 	}
 
+
 	@Override
 	public List<Brick> findBricksInNestedBricks(List<UUID> brickIds) {
 		if (!(this instanceof CompositeBrick)) {
@@ -287,16 +292,6 @@ public abstract class BrickBaseType implements Brick {
 					return true;
 				}
 			}
-//			if(!(b instanceof CompositeBrick)
-//					&& subStackIndex == 0
-//					&& b.getBrickID().equals(parentBrickId)) {
-//				cb.getNestedBricks().addAll(idx, bricksToAdd);
-//				return true;
-//			} else if(b instanceof CompositeBrick) {
-//				if(b.addBrickInNestedBrick(parentBrickId, subStackIndex, bricksToAdd)) {
-//					return true;
-//				}
-//			}
 		}
 
 		if (!cb.hasSecondaryList()) {
@@ -314,16 +309,7 @@ public abstract class BrickBaseType implements Brick {
 					return true;
 				}
 			}
-//			if(subStackIndex == 1 && b.getBrickID().equals(parentBrickId)) {
-//				cb.getNestedBricks().addAll(idx, bricksToAdd);
-//				return true;
-//			} else if(b instanceof CompositeBrick) {
-//				if(b.addBrickInNestedBrick(parentBrickId, subStackIndex, bricksToAdd)) {
-//					return true;
-//				}
-//			}
 		}
-
 		return false;
 	}
 }

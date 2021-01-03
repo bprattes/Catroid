@@ -101,6 +101,15 @@ img {
   cursor: pointer;
 }
 
+.catblocks-tab-script {
+  height: 2rem;
+}
+
+.catblocks-tab-icon {
+  height: 2rem;
+  font-size: 2rem;
+}
+
 .catblocks-script {
   padding: 0 20px;
 }
@@ -156,7 +165,8 @@ img {
   width: 100%;
 }
 
-.catblockls-blockly-invisible>.blocklyPath {
+.catblockls-blockly-invisible > .blocklyPath {
   fill-opacity: 0;
   stroke-opacity: 0;
 }
+

@@ -428,6 +428,30 @@ class CatblocksScriptFragment(
                 }
             }
         }
+
+        @JavascriptInterface
+        fun duplicateBrick(brickStrIdToClone: String): String? {
+            val brickIdToClone = UUID.fromString(brickStrIdToClone)
+
+            val foundBrick =
+                locateBrickInSprite(projectManager.currentSprite, brickIdToClone)
+                    ?: return null
+
+            var oldNewIds: Map<UUID, UUID>
+
+            if(foundBrick.brickIsScript) {
+                val clone = foundBrick.script?.clone() ?: return null
+                projectManager.currentSprite.scriptList.add(clone)
+                return clone.scriptId.toString()
+
+            } else {
+                val clone = foundBrick.brick?.clone() ?: return null
+                val dummyBrick = DummyBrick()
+                dummyBrick.script.brickList.add(clone)
+                projectManager.currentSprite.scriptList.add(dummyBrick.script)
+                return dummyBrick.script.scriptId.toString()
+            }
+        }
     }
 
     fun handleAddButton() {
