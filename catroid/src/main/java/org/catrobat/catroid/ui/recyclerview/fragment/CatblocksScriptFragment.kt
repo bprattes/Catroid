@@ -204,7 +204,7 @@ class CatblocksScriptFragment(
         @SuppressLint
         @JavascriptInterface
         fun updateScriptPosition(strScriptId: String, x: String, y: String) {
-            if (projectManager.currentProject == null) {
+            if (projectManager.currentSprite == null) {
                 return
             }
 
@@ -212,41 +212,13 @@ class CatblocksScriptFragment(
             val posX: Float = x.toFloat()
             val posY: Float = y.toFloat()
 
-            for (scene in projectManager.currentProject.sceneList) {
-                if (updateScriptPositionInScene(scriptId, posX, posY, scene)) {
-                    return
-                }
-            }
-        }
-
-        private fun updateScriptPositionInScene(
-            scriptId: UUID,
-            x: Float,
-            y: Float,
-            scene: Scene
-        ): Boolean {
-            for (sprite in scene.spriteList) {
-                if (updateScriptPositionInSprite(scriptId, x, y, sprite)) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        private fun updateScriptPositionInSprite(
-            scriptId: UUID,
-            x: Float,
-            y: Float,
-            sprite: Sprite
-        ): Boolean {
-            for (script in sprite.scriptList) {
+            for (script in projectManager.currentSprite.scriptList) {
                 if (script.scriptId == scriptId) {
-                    script.posX = x
-                    script.posY = y
-                    return true
+                    script.posX = posX
+                    script.posY = posY
+                    break
                 }
             }
-            return false
         }
 
         @JavascriptInterface
@@ -310,6 +282,7 @@ class CatblocksScriptFragment(
         @JavascriptInterface
         fun removeEmptyScriptBricks(): String {
             val removed = projectManager.currentSprite.removeAllEmptyScriptBricks()
+            println(removed)
             return JSONArray(removed).toString()
         }
 
