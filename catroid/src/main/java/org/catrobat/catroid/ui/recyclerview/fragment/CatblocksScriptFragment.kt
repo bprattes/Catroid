@@ -54,6 +54,7 @@ import org.catrobat.catroid.ui.fragment.BrickCategoryFragment.OnCategorySelected
 import org.catrobat.catroid.ui.fragment.UserDefinedBrickListFragment
 import org.catrobat.catroid.ui.settingsfragments.SettingsFragment
 import org.catrobat.catroid.utils.SnackbarUtil
+import org.catrobat.catroid.utils.ToastUtil
 import org.json.JSONArray
 import org.koin.java.KoinJavaComponent.inject
 import java.util.Locale
@@ -336,6 +337,24 @@ class CatblocksScriptFragment(
                 projectManager.currentSprite.scriptList.add(emptyBrick.script)
                 return emptyBrick.script.scriptId.toString()
             }
+        }
+
+        @JavascriptInterface
+        fun modifyBrickField(brickId: String, fieldId: String): String? {
+            val brickId = UUID.fromString(brickId)
+            val clickedBrick = projectManager.currentSprite.findBrickInSprite(brickId)
+
+            if(clickedBrick == null) {
+                ToastUtil.showError(context, "Error")
+                return null
+            }
+
+            // Start net Fragment only containing clickedBrick
+            // try to focus/click/select the clicked field there
+            // let user change value
+            // return changed value
+
+            return null
         }
     }
 
